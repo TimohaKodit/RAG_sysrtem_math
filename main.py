@@ -17,7 +17,7 @@ docs = loader.load()
 
 embeddings = GoogleGenerativeAIEmbeddings(
     model="gemini-embedding-001",
-    api_key="AIzaSyCAFSquM8MRz6Xezr6n7WhJxJvmnXybgcs"
+    api_key=""
 )
 
 
@@ -35,7 +35,7 @@ batch_size = 50
 
 llm = ChatGoogleGenerativeAI(
     model= "gemini-2.5-flash",
-    api_key="AIzaSyCAFSquM8MRz6Xezr6n7WhJxJvmnXybgcs"
+    api_key=""
 
 )
 
