@@ -1,1 +1,1 @@
-# RAG_sysrtem_math
+# RAG_system
