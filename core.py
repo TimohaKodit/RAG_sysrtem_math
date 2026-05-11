@@ -3,7 +3,10 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_classic.chains import create_retrieval_chain, create_history_aware_retriever
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_google_genai import ChatGoogleGenerativeAI
-from ingest import retriever
+from ingest import vector_store
+from langchain_classic.retrievers.contextual_compression import ContextualCompressionRetriever
+from langchain_cohere import ChatCohere, CohereRerank
+
 import os
 from dotenv import load_dotenv
 
@@ -20,7 +23,8 @@ contextualixe_q_system_prompt= (
 
 system_prompt = (
     "Ты полезный ассистент, который обучает языку Python"
-    "Исппользуй ТОЛЬКО фрагменты, из контекста,чтобы отвечать пользователю"
+    "Исппользуйфрагменты из контекста,чтобы отвечать пользователю"
+    "Отвечай подробно и развернуто, чтобы твой ответ был максимально понятен"
     "Если информации нет в контексте, просто скажи что не знаешь"
     "Контекст:\n{context}"
 )
@@ -48,9 +52,25 @@ llm = ChatGoogleGenerativeAI(
 )
 
 question_answer_chain = create_stuff_documents_chain(llm, prompt)
-history_retriever = create_history_aware_retriever(llm, retriever, contextulize)
 
-rag_chain = create_retrieval_chain(history_retriever, question_answer_chain)
+
+
+
+
+def get_rag_chain(user_id):
+
+    retriever = vector_store.as_retriever(search_kwargs={'filter': {'user_id': user_id}, 'k': 10})
+    compressor = CohereRerank(model='rerank-multilingual-v3.0', cohere_api_key=os.getenv("COHERE_API_KEY"), top_n=10)
+    compression = ContextualCompressionRetriever(
+        base_compressor=compressor,
+        base_retriever=retriever
+    )
+
+    history_retriever = create_history_aware_retriever(llm, compression, contextulize)
+    rag_chain = create_retrieval_chain(history_retriever, question_answer_chain)
+
+    return rag_chain
+
 
 
 
